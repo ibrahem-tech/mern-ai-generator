@@ -17,7 +17,32 @@ const CreatePost = () => {
   const [generatingImg, setGeneratingImg] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (form.prompt && form.photo) {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:8080/api/v1/post", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ...form }),
+        });
+
+        await response.json();
+        // alert("Success");
+        navigate("/");
+      } catch (err) {
+        alert(err);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      alert("Please generate an image with proper details");
+    }
+  };
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,15 +52,39 @@ const CreatePost = () => {
     setForm({ ...form, prompt: randomPrompt });
   };
 
-  const generateImage = () => {};
+  const generateImage = async () => {
+    if (form.prompt) {
+      try {
+        setGeneratingImg(true);
+        const response = await fetch("http://localhost:8080/api/v1/dalle", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt: form.prompt,
+          }),
+        });
+
+        const data = await response.json();
+        setForm({ ...form, photo: `data:image/jpeg;base64,${data.photo}` });
+      } catch (err) {
+        alert(err);
+      } finally {
+        setGeneratingImg(false);
+      }
+    } else {
+      alert("Please provide proper prompt");
+    }
+  };
 
   return (
     <section className="max-w-7xl mx-auto">
       <div>
-        <h1 className="font-extrabold text-[#222328] text-[32px]">
+        <h1 className="font-extrabold text-purple-200 text-[32px]">
           Publish a post
         </h1>
-        <p className="mt-2 text-[#666e75] text-[16px] max-w-[500px]">
+        <p className="mt-2 text-[#FAF9F6] text-[16px] max-w-[500px]">
           Craft an imaginative image with DALL-E AI and share it across the
           community.
         </p>
@@ -88,7 +137,7 @@ const CreatePost = () => {
           <button
             type="button"
             onClick={generateImage}
-            className=" text-white bg-[#6469ff] font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+            className=" text-black bg-purple-200 font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"
           >
             {generatingImg ? "Generating..." : "Generate"}
           </button>
@@ -100,7 +149,7 @@ const CreatePost = () => {
           </p>
           <button
             type="submit"
-            className="mt-3 text-white bg-[#6469ff] font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+            className="mt-3 text-black bg-purple-200 font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"
           >
             {loading ? "Sharing..." : "Share with the Community"}
           </button>
